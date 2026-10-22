@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+.git
+public/uploads
+**/*_test.go

@@ -1,0 +1,6 @@
+ALTER TABLE projects
+    DROP COLUMN IF EXISTS category,
+    DROP COLUMN IF EXISTS year,
+    DROP COLUMN IF EXISTS link,
+    DROP COLUMN IF EXISTS text_side,
+    DROP COLUMN IF EXISTS sort_order;

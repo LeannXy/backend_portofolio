@@ -1,0 +1,18 @@
+ALTER TABLE projects
+    ADD COLUMN IF NOT EXISTS category VARCHAR(100) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS year VARCHAR(12) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS link TEXT,
+    ADD COLUMN IF NOT EXISTS text_side VARCHAR(5) NOT NULL DEFAULT 'left',
+    ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
+
+UPDATE projects
+SET category = tech_stack
+WHERE category = '';
+
+UPDATE projects
+SET year = EXTRACT(YEAR FROM created_at)::INTEGER::TEXT
+WHERE year = '';
+
+ALTER TABLE projects
+    ALTER COLUMN image_url TYPE TEXT,
+    ALTER COLUMN tech_stack TYPE TEXT;
