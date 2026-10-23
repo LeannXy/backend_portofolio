@@ -61,6 +61,24 @@ func TestValidateSiteContent(t *testing.T) {
 			ok:   true,
 		},
 		{
+			name: "Cloudinary profile WebP",
+			key:  "profileImage",
+			data: `"https://res.cloudinary.com/demo/image/upload/v123/portfolio/profile.webp"`,
+			ok:   true,
+		},
+		{
+			name: "Cloudinary profile image must use HTTPS",
+			key:  "profileImage",
+			data: `"http://res.cloudinary.com/demo/image/upload/v123/portfolio/profile.webp"`,
+			ok:   false,
+		},
+		{
+			name: "profile image cannot use another external host",
+			key:  "profileImage",
+			data: `"https://attacker.example/demo/image/upload/profile.webp"`,
+			ok:   false,
+		},
+		{
 			name: "profile image must be WebP",
 			key:  "profileImage",
 			data: `"/uploads/123e4567-e89b-12d3-a456-426614174000.jpg"`,

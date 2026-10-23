@@ -137,9 +137,25 @@ func validateContent(key string, raw json.RawMessage) error {
 		if err := json.Unmarshal(raw, &imagePath); err != nil {
 			return fmt.Errorf("Foto profil harus berupa path gambar yang valid.")
 		}
-		if imagePath != "/profile.webp" && (!strings.HasSuffix(imagePath, ".webp") || !validUploadedImagePath(imagePath)) {
+		if imagePath != "/profile.webp" && !validUploadedProfileImage(imagePath) {
 			return fmt.Errorf("Foto profil harus menggunakan gambar WebP yang diunggah melalui dashboard.")
 		}
 	}
 	return nil
+}
+
+func validUploadedProfileImage(imagePath string) bool {
+	if strings.HasSuffix(imagePath, ".webp") && validUploadedImagePath(imagePath) {
+		return true
+	}
+
+	parsed, err := url.Parse(imagePath)
+	if err != nil || parsed.Scheme != "https" || parsed.Host != "res.cloudinary.com" ||
+		parsed.User != nil || parsed.Fragment != "" || !strings.HasSuffix(parsed.Path, ".webp") {
+		return false
+	}
+
+	segments := strings.Split(strings.Trim(parsed.Path, "/"), "/")
+	return len(segments) >= 5 && segments[0] != "" &&
+		segments[1] == "image" && segments[2] == "upload"
 }
