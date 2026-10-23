@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"net/mail"
 	"net/url"
 	"strings"
 
@@ -16,6 +17,7 @@ var contentKeys = map[string]bool{
 	"technologies": true,
 	"socials":      true,
 	"profileImage": true,
+	"contact":      true,
 }
 
 func GetSiteContent(c fiber.Ctx) error {
@@ -140,8 +142,34 @@ func validateContent(key string, raw json.RawMessage) error {
 		if imagePath != "/profile.webp" && !validUploadedProfileImage(imagePath) {
 			return fmt.Errorf("Foto profil harus menggunakan gambar WebP yang diunggah melalui dashboard.")
 		}
+	case "contact":
+		var contact struct {
+			Email      string `json:"email"`
+			GitHubRepo string `json:"githubRepo"`
+		}
+		if err := json.Unmarshal(raw, &contact); err != nil {
+			return fmt.Errorf("Kontak harus berupa objek email dan tautan GitHub yang valid.")
+		}
+		if !validContactEmail(contact.Email) {
+			return fmt.Errorf("Masukkan alamat email kontak yang valid.")
+		}
+		if contact.GitHubRepo != "" {
+			parsed, err := url.ParseRequestURI(contact.GitHubRepo)
+			if err != nil || parsed.Scheme != "https" || parsed.Host != "github.com" || parsed.User != nil ||
+				parsed.RawQuery != "" || parsed.Fragment != "" || strings.ContainsAny(contact.GitHubRepo, "\r\n") {
+				return fmt.Errorf("Tautan repository harus berupa URL HTTPS dari github.com.")
+			}
+		}
 	}
 	return nil
+}
+
+func validContactEmail(value string) bool {
+	if value == "" || len(value) > 254 || strings.ContainsAny(value, "\r\n") {
+		return false
+	}
+	address, err := mail.ParseAddress(value)
+	return err == nil && address.Address == value
 }
 
 func validUploadedProfileImage(imagePath string) bool {

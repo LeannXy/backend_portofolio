@@ -84,6 +84,24 @@ func TestValidateSiteContent(t *testing.T) {
 			data: `"/uploads/123e4567-e89b-12d3-a456-426614174000.jpg"`,
 			ok:   false,
 		},
+		{
+			name: "contact settings",
+			key:  "contact",
+			data: `{"email":"owner@example.com","githubRepo":"https://github.com/owner/project"}`,
+			ok:   true,
+		},
+		{
+			name: "contact email must be valid",
+			key:  "contact",
+			data: `{"email":"not-an-email","githubRepo":"https://github.com/owner/project"}`,
+			ok:   false,
+		},
+		{
+			name: "contact repository must use GitHub HTTPS",
+			key:  "contact",
+			data: `{"email":"owner@example.com","githubRepo":"https://attacker.example/owner/project"}`,
+			ok:   false,
+		},
 	}
 
 	for _, test := range tests {

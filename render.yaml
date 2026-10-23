@@ -33,3 +33,19 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: Billean
+      - key: CONTACT_EMAIL
+        sync: false

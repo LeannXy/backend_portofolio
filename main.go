@@ -10,6 +10,7 @@ import (
 	"portfolio-api/database/seed" // Import folder seeders
 	"portfolio-api/middleware"
 	"portfolio-api/routes"
+	"portfolio-api/services"
 	"portfolio-api/storage"
 
 	"github.com/gofiber/fiber/v3"
@@ -17,6 +18,8 @@ import (
 )
 
 func main() {
+	var emailSender services.EmailSender
+
 	// 1. Muat konfigurasi
 	config.LoadConfig()
 	if os.Getenv("ADMIN_USERNAME") == "" || os.Getenv("ADMIN_PASSWORD") == "" {
@@ -59,6 +62,20 @@ func main() {
 		if cloudinary == nil {
 			log.Fatal("Cloudinary wajib dikonfigurasi di production agar upload bertahan setelah restart.")
 		}
+		configuredEmailSender, err := services.NewSMTPMailerFromEnv()
+		if err != nil {
+			log.Fatal("Konfigurasi SMTP tidak valid: ", err)
+		}
+		if configuredEmailSender == nil {
+			log.Fatal("MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_ENCRYPTION, dan MAIL_FROM_ADDRESS wajib dikonfigurasi di production.")
+		}
+		emailSender = configuredEmailSender
+	} else {
+		configuredEmailSender, err := services.NewSMTPMailerFromEnv()
+		if err != nil {
+			log.Fatal("Konfigurasi SMTP tidak valid: ", err)
+		}
+		emailSender = configuredEmailSender
 	}
 
 	// 2. Hubungkan Database
@@ -85,7 +102,7 @@ func main() {
 	})
 
 	// 7. Muat Rute Utama
-	routes.SetupRoutes(app)
+	routes.SetupRoutes(app, emailSender)
 
 	// 8. Jalankan Server
 	port := strings.TrimSpace(config.GetEnv("PORT", "3000"))

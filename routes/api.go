@@ -16,7 +16,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func SetupRoutes(app *fiber.App) {
+func SetupRoutes(app *fiber.App, emailSender services.EmailSender) {
 	api := app.Group("/api")
 
 	// Dependency Injection (Merakit komponen)
@@ -24,6 +24,7 @@ func SetupRoutes(app *fiber.App) {
 	projectService := services.NewProjectService(projectRepo)
 	projectController := controllers.NewProjectController(projectService)
 	adminController := controllers.NewAdminController(projectService)
+	contactController := controllers.NewContactController(emailSender)
 
 	loginLimiter := limiter.New(limiter.Config{
 		Max:                    10,
@@ -35,10 +36,20 @@ func SetupRoutes(app *fiber.App) {
 			})
 		},
 	})
+	contactLimiter := limiter.New(limiter.Config{
+		Max:        3,
+		Expiration: 15 * time.Minute,
+		LimitReached: func(c fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"error": "Terlalu banyak pesan dikirim. Coba lagi beberapa menit.",
+			})
+		},
+	})
 
 	api.Get("/projects", projectController.GetProjects)
 	api.Get("/content", controllers.GetSiteContent)
 	api.Get("/auth/session", adminController.Session)
+	api.Post("/contact", contactLimiter, middleware.RequireAllowedOrigin, contactController.Submit)
 	api.Post("/auth/login", loginLimiter, middleware.RequireAllowedOrigin, adminController.Login)
 	api.Post("/auth/logout", middleware.AdminAuth, middleware.RequireAllowedOrigin, adminController.Logout)
 
